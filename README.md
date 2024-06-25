@@ -14,6 +14,45 @@ TypeScript cannot handle type information for `.vue` imports by default, so we r
 
 See [Vite Configuration Reference](https://vitejs.dev/config/).
 
+To customize the configuration, you can modify the Vite config file. Here's an example of how to inject specific globals and modules using the `@rollup/plugin-inject` plugin:
+
+```javascript
+import { fileURLToPath, URL } from 'node:url'
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
+import nightwatchPlugin from 'vite-plugin-nightwatch'
+import vueDevTools from 'vite-plugin-vue-devtools'
+import inject from '@rollup/plugin-inject'
+
+// https://vitejs.dev/config/
+export default ({ mode }) => {
+  return defineConfig({
+    plugins: [
+      vue(),
+      vueJsx(),
+      nightwatchPlugin({
+        renderPage: './nightwatch/index.html'
+      }),
+      vueDevTools(),
+      inject({
+        process: 'process/browser',
+        querystring: 'querystring-es3'
+      })
+    ],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        process: 'process/browser',
+        querystring: 'querystring-es3'
+      }
+    }
+  })
+}
+```
+
+<vscode_annotation details='%5B%7B%22title%22%3A%22hardcoded-credentials%22%2C%22description%22%3A%22Embedding%20credentials%20in%20source%20code%20risks%20unauthorized%20access%22%7D%5D'>This</vscode_annotation> configuration includes the @rollup/plugin-inject to inject global variables or modules, which is particularly useful for ensuring compatibility with certain dependencies in the browser.
+
 ## Project Setup
 
 ```sh
@@ -47,9 +86,9 @@ pnpm test:e2e tests/e2e/example.ts
 # Runs the tests in debug mode
 pnpm test:e2e --debug
 ```
-    
+
 ### Run Headed Component Tests with [Nightwatch Component Testing](https://nightwatchjs.org/guide/component-testing/introduction.html)
-  
+
 ```sh
 pnpm test:unit
 pnpm test:unit -- --headless # for headless testing
