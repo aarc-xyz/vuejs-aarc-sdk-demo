@@ -51,7 +51,7 @@ export default ({ mode }) => {
 }
 ```
 
-<vscode_annotation details='%5B%7B%22title%22%3A%22hardcoded-credentials%22%2C%22description%22%3A%22Embedding%20credentials%20in%20source%20code%20risks%20unauthorized%20access%22%7D%5D'>This</vscode_annotation> configuration includes the @rollup/plugin-inject to inject global variables or modules, which is particularly useful for ensuring compatibility with certain dependencies in the browser.
+This configuration includes the `@rollup/plugin-inject` to inject global variables or modules, which is particularly useful for ensuring compatibility with certain dependencies in the browser.
 
 ## Project Setup
 
