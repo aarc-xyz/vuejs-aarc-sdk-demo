@@ -5,6 +5,99 @@ import { AarcCore } from '@aarc-dev/core-viem'
 import { createWalletClient, custom, http, type Account } from 'viem'
 import { polygon } from 'viem/chains'
 
+import axios from 'axios'
+const base_url = 'https://user-services.staging.aarc.xyz'
+
+const generateUrl = async (
+  provider: string,
+  chainId: number,
+  aarcApiKey: string,
+  public_token: string,
+  env: string,
+  session_identifier: string = 'session-identifier-test'
+) => {
+  const stytch_base_url =
+    env === 'staging' ? 'https://test.stytch.com/' : 'https://api.stytch.aarc.xyz/'
+
+  try {
+    const state = JSON.stringify({
+      provider,
+      session_identifier,
+      env,
+      chainId,
+      aarcApiKey
+    })
+    const redirect_url = 'https://auth.aarc.xyz/auth'
+
+    const authUrl = `${stytch_base_url}v1/public/oauth/${provider}/start?public_token=${public_token}&login_redirect_url=${redirect_url}/?state=${state}&signup_redirect_url=${redirect_url}/?state=${state}`
+
+    return authUrl
+  } catch (error) {
+    // Handle errors appropriately
+    console.error('Error during authentication:', error)
+  }
+}
+
+const pollLogin = async (
+  provider: string,
+  session_identifier: string,
+  aarc_api_key: string,
+  maxTime = 60,
+  w: Window = window
+) => {
+  let timeElapsed = 0
+
+  const poll = async () => {
+    try {
+      const res = await axios.get(`${base_url}poll-session/${provider}/${session_identifier}`, {
+        headers: {
+          'x-api-key': aarc_api_key
+        }
+      })
+
+      const data = res.data
+      if (data.code === 200) {
+        return { status: 'success', data: data }
+      }
+    } catch (err) {
+      if (w.closed && timeElapsed < maxTime - 4) {
+        timeElapsed = maxTime - 4
+      }
+
+      timeElapsed++
+
+      if (timeElapsed >= maxTime) {
+        return { status: 'error', message: 'Time limit exceeded' }
+      }
+
+      setTimeout(poll, 1000)
+    }
+  }
+
+  poll()
+}
+
+const executeGoogleLogin = async () => {
+  const provider = 'google'
+  const chainId = 137
+  const aarcApiKey = 'd90967f9-6e73-4bc6-8463-bd59f81b6e59'
+  const public_token = 'public-token-test-6637457e-a96d-4c21-9d21-bc27add4759b'
+  const env = 'staging'
+  const session_identifier = Math.random().toString(36).substring(7)
+
+  const authUrl = await generateUrl(
+    provider,
+    chainId,
+    aarcApiKey,
+    public_token,
+    env,
+    session_identifier
+  )
+  const w = await window.open(authUrl, '_blank', 'width=600,height=600')
+  const poll = await pollLogin(provider, session_identifier, aarcApiKey)
+  console.log('Poll Response: ', poll)
+}
+
 interface EthereumWindow extends Window {
   ethereum?: {
     request: ({ method }: { method: string }) => Promise<string[]>
@@ -89,7 +182,10 @@ const btnMsg = computed(() => (isConnected.value ? 'Deposit' : 'Connect Wallet')
       <HelloWorld :msg="message" />
     </div>
     <div class="second">
-      <button @click="isConnected ? performDeposit() : requestAccount()" :disabled="loading">
+      <button
+        @click="isConnected ? executeGoogleLogin() : executeGoogleLogin()"
+        :disabled="loading"
+      >
         <span v-if="loading">Processing...</span>
         <span v-else>{{ btnMsg }}</span>
       </button>

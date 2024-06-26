@@ -17,6 +17,7 @@
   "dependencies": {
     "@aarc-dev/core-viem": "^0.0.3",
     "@rollup/plugin-inject": "^5.0.5",
+    "axios": "^1.7.2",
     "install": "^0.13.0",
     "pinia": "^2.1.7",
     "querystring-es3": "^0.2.1",
